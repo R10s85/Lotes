@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora de Precios de iPhones Usados</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000; /* Fondo completamente negro */
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #111;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 450px;
+            box-sizing: border-box;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo img {
+            width: 120px;
+            height: auto;
+        }
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        form label {
+            display: block;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        form input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: none;
+            border-radius: 6px;
+            background-color: #222;
+            color: #fff;
+            font-size: 0.95em;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background-color: #1DB954;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #17a846;
+        }
+        .hidden {
+            display: none;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        #results h2 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #1DB954;
+        }
+        #results p {
+            margin: 5px 0;
+            font-size: 1em;
+            color: #1DB954; /* Verde de Spotify */
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.4em;
+            }
+            button {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="fullrenew_logo.png" alt="FullRenew Logo">
+        </div>
+        <h1>Calculadora de Precios</h1>
+        <form id="priceCalculator">
+            <label for="totalCost">Costo total del lote (€):</label>
+            <input type="number" id="totalCost" required>
+
+            <label for="shippingCost">Costo total de envío (€):</label>
+            <input type="number" id="shippingCost" value="0" required>
+
+            <label for="repairCost">Costo total de reparaciones (€):</label>
+            <input type="number" id="repairCost" value="0" required>
+
+            <label for="totalUnits">Número total de unidades:</label>
+            <input type="number" id="totalUnits" required>
+
+            <label for="impecablePercentage">Porcentaje de unidades impecables (%):</label>
+            <input type="number" id="impecablePercentage" required>
+
+            <label for="buenoPercentage">Porcentaje de unidades buenas (%):</label>
+            <input type="number" id="buenoPercentage" required>
+
+            <label for="correctoPercentage">Porcentaje de unidades correctas (%):</label>
+            <input type="number" id="correctoPercentage" required>
+
+            <label for="profitMargin">Margen de ganancia deseado (%):</label>
+            <input type="number" id="profitMargin" value="8" required>
+
+            <label for="maxImpecablePrice">Precio máximo por unidad impecable (€):</label>
+            <input type="number" id="maxImpecablePrice" required>
+
+            <button type="submit">Calcular Precios</button>
+        </form>
+        <div id="results" class="hidden">
+            <h2>Resultados:</h2>
+            <p>Costo por unidad: <span id="costPerUnit"></span> €</p>
+            <p>Precio de venta por unidad impecable: <span id="impecablePrice"></span> € (<span id="impecableMargin"></span>% margen)</p>
+            <p>Precio de venta por unidad buena: <span id="buenoPrice"></span> € (<span id="buenoMargin"></span>% margen)</p>
+            <p>Precio de venta por unidad correcta: <span id="correctoPrice"></span> € (<span id="correctoMargin"></span>% margen)</p>
+        </div>
+    </div>
+    <script>
+        document.getElementById('priceCalculator').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            try {
+                const totalCost = parseFloat(document.getElementById('totalCost').value);
+                const shippingCost = parseFloat(document.getElementById('shippingCost').value);
+                const repairCost = parseFloat(document.getElementById('repairCost').value);
+                const totalUnits = parseInt(document.getElementById('totalUnits').value);
+                const impecablePercentage = parseFloat(document.getElementById('impecablePercentage').value) / 100;
+                const buenoPercentage = parseFloat(document.getElementById('buenoPercentage').value) / 100;
+                const correctoPercentage = parseFloat(document.getElementById('correctoPercentage').value) / 100;
+                const profitMargin = parseFloat(document.getElementById('profitMargin').value) / 100;
+                const maxImpecablePrice = parseFloat(document.getElementById('maxImpecablePrice').value);
+
+                if ((impecablePercentage + buenoPercentage + correctoPercentage) !== 1) {
+                    alert('La suma de los porcentajes debe ser igual al 100%');
+                    return;
+                }
+
+                const combinedCost = totalCost + shippingCost + repairCost;
+                const averageCost = combinedCost / totalUnits;
+
+                const impecableFactor = 1.2;
+                const buenoFactor = 1.0;
+
+                let impecablePrice = (averageCost * impecableFactor) * (1 + profitMargin);
+                let buenoPrice = (averageCost * buenoFactor) * (1 + profitMargin);
+                let correctoPrice = averageCost + 10; // Correcto siempre será costo promedio + 10€
+
+                if (impecablePrice > maxImpecablePrice) {
+                    impecablePrice = maxImpecablePrice;
+                }
+
+                if (buenoPrice > impecablePrice) {
+                    buenoPrice = impecablePrice - 1; // Mantener bueno menor que impecable.
+                }
+
+                const impecableMargin = ((impecablePrice - averageCost) / averageCost) * 100;
+                const buenoMargin = ((buenoPrice - averageCost) / averageCost) * 100;
+                const correctoMargin = ((correctoPrice - averageCost) / averageCost) * 100;
+
+                document.getElementById('costPerUnit').textContent = averageCost.toFixed(2);
+                document.getElementById('impecablePrice').textContent = impecablePrice.toFixed(2);
+                document.getElementById('buenoPrice').textContent = buenoPrice.toFixed(2);
+                document.getElementById('correctoPrice').textContent = correctoPrice.toFixed(2);
+
+                document.getElementById('impecableMargin').textContent = impecableMargin.toFixed(2);
+                document.getElementById('buenoMargin').textContent = buenoMargin.toFixed(2);
+                document.getElementById('correctoMargin').textContent = correctoMargin.toFixed(2);
+
+                document.getElementById('results').classList.remove('hidden');
+            } catch (error) {
+                alert('Ocurrió un error al procesar los datos: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
